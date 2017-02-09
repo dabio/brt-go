@@ -1,0 +1,19 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//berlinracingteam//events//DE
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Berlin Racing Team Rennen
+X-WR-TIMEZONE:UTC
+X-WR-CALDESC:Berlin Racing Team Rennen{{ range . }}
+BEGIN:VEVENT
+UID:{{ .UID }}
+DTSTAMP:{{ .DTStamp }}
+DTSTART;VALUE=DATE:{{ .DTStart }}
+DTEND;VALUE=DATE:{{ .DTEnd }}
+SUMMARY:{{ .Summary }}
+ORGANIZER;CN={{ .Organizer.CN }}
+{{ if gt (len .URL) 3 }}URL:{{ .URL }}{{ end }}{{ range .Attendees }}
+ATTENDEE;PARTSTAT=ACCEPTED;CN={{ .CN }}{{ end }}
+END:VEVENT{{ end }}
+END:VCALENDAR

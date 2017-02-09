@@ -1,0 +1,7 @@
+{
+    "rootPath": "github.com/dabio/brt-frontend",
+    "heroku": {
+        "install": ["./..."],
+        "goVersion": "go1.7"
+    }
+}
