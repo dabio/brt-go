@@ -19,6 +19,10 @@ type context struct {
 }
 
 func (c *context) index(w http.ResponseWriter, r *http.Request) {
+	// check if method is allowed
+
+	// check if path is / - redirect when not the case
+
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	data := struct {
@@ -50,11 +54,7 @@ func (c *context) render(w http.ResponseWriter, tmpl string, data interface{}) {
 
 func enableCORS(fn http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		scheme := "http"
-		if r.TLS != nil {
-			scheme = "https"
-		}
-		w.Header().Set("Access-Control-Allow-Origin", scheme+"://"+r.Host)
+		w.Header().Set("Access-Control-Allow-Origin", "https://"+r.Host)
 
 		fn(w, r)
 	}
