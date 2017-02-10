@@ -7,6 +7,7 @@ import (
 	"os"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/dabio/brt-go/models"
@@ -19,9 +20,18 @@ type context struct {
 }
 
 func (c *context) index(w http.ResponseWriter, r *http.Request) {
-	// check if method is allowed
-
 	// check if path is / - redirect when not the case
+	oldURLs := []string{"/rennen", "/team", "/kontakt", "/news"}
+	for _, url := range oldURLs {
+		if strings.HasPrefix(r.URL.String(), url) {
+			http.Redirect(w, r, "/", http.StatusMovedPermanently)
+			return
+		}
+	}
+
+	// check if method is allowed
+	if r.Method != "GET" {
+	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
