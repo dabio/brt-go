@@ -5,7 +5,7 @@
 default: all
 
 all:
-	go run -v web.go
+	go run -v main.go
 
 test:
 	go test -v ./...

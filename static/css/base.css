@@ -54,13 +54,18 @@ li {
   margin-right: 1.335rem;
 	width: 9.535rem; /*10.535rem;*/
 }
+li:nth-child(4),
+li:nth-child(8) {
+	margin-right: 0;
+}
 li img {
 	width: 9.535rem; /*10.535rem;*/
 }
 li img.stieg {
+	margin-top: 1rem;
   margin-left: 1rem;
   margin-right: 1rem;
-	width: 7rem; /*10.535rem;*/
+	width: 7.535rem; /*10.535rem;*/
 }
 
 a {

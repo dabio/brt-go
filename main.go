@@ -12,6 +12,7 @@ import (
 
 	"github.com/dabio/brt-go/models"
 	_ "github.com/lib/pq"
+	stathat "github.com/stathat/go"
 )
 
 type context struct {
@@ -72,12 +73,16 @@ func enableCORS(fn http.HandlerFunc) http.HandlerFunc {
 
 func track(fn http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if os.Getenv("ENV") != "production" {
-			defer func(start time.Time, r *http.Request) {
-				elapsed := time.Since(start)
+		defer func(start time.Time, r *http.Request) {
+			elapsed := time.Since(start)
+			if os.Getenv("ENV") == "production" {
+				sh := os.Getenv("STATHAT")
+				stathat.PostEZCountOne("visit", sh)
+				stathat.PostEZValue("duration", sh, float64(elapsed/1000000))
+			} else {
 				log.Printf("%s %s %s", r.Method, r.URL, elapsed)
-			}(time.Now(), r)
-		}
+			}
+		}(time.Now(), r)
 
 		fn(w, r)
 	}
