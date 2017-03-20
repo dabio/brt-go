@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -25,12 +26,13 @@ func TestIndex(t *testing.T) {
 		t.Errorf("wrong status code: got %v want %v", status, http.StatusOK)
 	}
 
-	// expected := "Hello World\n"
-	// if body := rr.Body.String(); body != expected {
-	// 	t.Errorf("wrong body: got %v want %v", body, expected)
-	// }
+	expected := "Berlin Racing Team"
+	body := rr.Body.String()
+	if !strings.Contains(body, expected) {
+		t.Errorf("wrong body: got %v want %v", body, expected)
+	}
 
-	expected := `text/html; charset=utf-8`
+	expected = `text/html; charset=utf-8`
 	if contentType := rr.Header().Get("Content-Type"); contentType != expected {
 		t.Errorf("wrong content type: got %v want %v", contentType, expected)
 	}
@@ -46,7 +48,7 @@ func TestPathMoved(t *testing.T) {
 		templates: template.Must(template.ParseGlob("./views/*.tmpl")),
 	}
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(c.index)
+	handler := http.HandlerFunc(c.redirect)
 
 	handler.ServeHTTP(rr, req)
 
@@ -65,7 +67,7 @@ func TestPathMovedSubdirectory(t *testing.T) {
 		templates: template.Must(template.ParseGlob("./views/*.tmpl")),
 	}
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(c.index)
+	handler := http.HandlerFunc(c.redirect)
 
 	handler.ServeHTTP(rr, req)
 

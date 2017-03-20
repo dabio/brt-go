@@ -7,11 +7,11 @@ import (
 	"os"
 	"runtime"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/dabio/brt-go/models"
 	_ "github.com/lib/pq"
+	"github.com/pinub/mux"
 	stathat "github.com/stathat/go"
 )
 
@@ -20,20 +20,11 @@ type context struct {
 	templates *template.Template
 }
 
+func (c *context) redirect(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/", http.StatusMovedPermanently)
+}
+
 func (c *context) index(w http.ResponseWriter, r *http.Request) {
-	// check if path is / - redirect when not the case
-	oldURLs := []string{"/rennen", "/team", "/kontakt", "/news"}
-	for _, url := range oldURLs {
-		if strings.HasPrefix(r.URL.String(), url) {
-			http.Redirect(w, r, "/", http.StatusMovedPermanently)
-			return
-		}
-	}
-
-	// check if method is allowed
-	if r.Method != "GET" {
-	}
-
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	data := struct {
@@ -63,31 +54,6 @@ func (c *context) render(w http.ResponseWriter, tmpl string, data interface{}) {
 	}
 }
 
-func enableCORS(fn http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "https://"+r.Host)
-
-		fn(w, r)
-	}
-}
-
-func track(fn http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		defer func(start time.Time, r *http.Request) {
-			elapsed := time.Since(start)
-			if os.Getenv("ENV") == "production" {
-				sh := os.Getenv("STATHAT")
-				stathat.PostEZCountOne("visit", sh)
-				stathat.PostEZValue("duration", sh, float64(elapsed/1000000))
-			} else {
-				log.Printf("%s %s %s", r.Method, r.URL, elapsed)
-			}
-		}(time.Now(), r)
-
-		fn(w, r)
-	}
-}
-
 func init() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 }
@@ -104,12 +70,18 @@ func main() {
 		db:        db,
 	}
 
+	h := mux.New()
+	h.Get("/", track(c.index))
+	h.Get("/rennen.ics", track(c.calendar))
+	h.Get("/rennen", track(c.redirect))
+	h.Get("/team", track(c.redirect))
+	h.Get("/kontakt", track(c.redirect))
+	h.Get("/news", track(c.redirect))
+
 	m := http.NewServeMux()
 	m.Handle("/css/", http.FileServer(http.Dir("./static/")))
 	m.Handle("/img/", http.FileServer(http.Dir("./static/")))
-
-	m.Handle("/", track(enableCORS(c.index)))
-	m.Handle("/rennen.ics", track(enableCORS(c.calendar)))
+	m.Handle("/", h)
 
 	s := &http.Server{
 		Addr:         ":" + os.Getenv("PORT"),
@@ -122,4 +94,21 @@ func main() {
 	}
 
 	log.Fatal(s.ListenAndServe())
+}
+
+func track(fn http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		defer func(start time.Time, r *http.Request) {
+			elapsed := time.Since(start)
+			if os.Getenv("ENV") == "production" {
+				sh := os.Getenv("STATHAT")
+				stathat.PostEZCountOne("brt visit", sh)
+				stathat.PostEZValue("brt duration", sh, float64(elapsed/time.Microsecond))
+			} else {
+				log.Printf("%s %s %s", r.Method, r.URL, elapsed)
+			}
+		}(time.Now(), r)
+
+		fn(w, r)
+	}
 }
